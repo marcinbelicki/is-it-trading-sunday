@@ -3,14 +3,24 @@
 
 <head>
 
-    <title>Czy dziś jest niedziela handlowa?</title>
+    <title>Czy dzisiaj jest niedziela handlowa?</title>
 </head>
 
 <body>
-    <p>Dzisiaj jest: <span id="today"></span>.</p>
-    <p><span id="q"></span> <span id="a"></span></p>
-    <p id="list-title"></p>
-    <ul id="list"></ul>
+    <span style="font-size: larger;">
+        <p>Dzisiaj w Polsce jest <span id="today"></span>.<br>
+        <span id="q"></span> <b id="a"></b><br>
+        <span id="list-title"></span><br>
+        <ul id="list" style="margin-top: -17px;"></ul>
+    </p>
+    </span>
+    <hr />
+
+    <p style="font-size: xx-small;">Podstawa prawna: <a
+            href="https://isap.sejm.gov.pl/isap.nsf/DocDetails.xsp?id=WDU20180000305">Ustawa z dnia 10 stycznia 2018 r.
+            o ograniczeniu handlu w niedziele i święta oraz w niektóre inne dni</a><br>
+            Ostatnia aktualizacja strony: 31 sierpnia 2025
+        </p>
 
     <script>
 
@@ -37,19 +47,6 @@
             year: 'numeric'
         });
 
-        function dateWithTimeZone(timeZone, year, month, day) {
-
-            let date = new Date(Date.UTC(year, month, day));
-
-            let utcDate = new Date(date.toLocaleString('en-US', { timeZone: "UTC" }));
-            let tzDate = new Date(date.toLocaleString('en-US', { timeZone: timeZone }));
-            let offset = utcDate.getTime() - tzDate.getTime();
-
-            date.setTime(date.getTime() + offset);
-
-            return date;
-        }
-
         // https://gist.github.com/johndyer/0dffbdd98c2046f41180c051f378f343
         function getEaster(year) {
             var f = Math.floor,
@@ -67,27 +64,27 @@
                 month = 2 + f((L + 40) / 44),
                 day = L + 28 - 31 * f((month + 1) / 4);
 
-            return dateWithTimeZone("Europe/Warsaw", year, month, day);
+            return new Date(year, month, day);
         }
 
         // https://isap.sejm.gov.pl/isap.nsf/download.xsp/WDU19510040028/U/D19510028Lj.pdf
         function holidaysForGivenEaster(easter) {
             const year = easter.getFullYear();
             return [
-                dateWithTimeZone("Europe/Warsaw", year, 0, 1),
-                dateWithTimeZone("Europe/Warsaw", year, 0, 6),
+                new Date(year, 0, 1),
+                new Date(year, 0, 6),
                 easter,
                 easter.addDays(1),
-                dateWithTimeZone("Europe/Warsaw", year, 4, 1),
-                dateWithTimeZone("Europe/Warsaw", year, 4, 3),
+                new Date(year, 4, 1),
+                new Date(year, 4, 3),
                 easter.addDays(49),
                 easter.addDays(60),
-                dateWithTimeZone("Europe/Warsaw", year, 7, 15),
-                dateWithTimeZone("Europe/Warsaw", year, 10, 1),
-                dateWithTimeZone("Europe/Warsaw", year, 10, 11),
-                dateWithTimeZone("Europe/Warsaw", year, 11, 24),
-                dateWithTimeZone("Europe/Warsaw", year, 11, 25),
-                dateWithTimeZone("Europe/Warsaw", year, 11, 26)
+                new Date(year, 7, 15),
+                new Date(year, 10, 1),
+                new Date(year, 10, 11),
+                new Date(year, 11, 24),
+                new Date(year, 11, 25),
+                new Date(year, 11, 26)
             ].map(date => +date);
         }
 
@@ -127,7 +124,7 @@
             const tradingSundaysAfterToday = thisYearsTradingSundays.filter(date => date > todaysDate);
 
             document.getElementById("today").innerText = TODAYS_FOMRATTER.format(todaysDate);
-           
+
             if (isSunday) {
                 q.innerText = "Czy dzisiaj jest niedziela handlowa?";
                 if (thisYearsTradingSundaysTimes.includes(todaysDate.getTime())) {
@@ -150,16 +147,17 @@
                     return `<li>${SUNDAYS_FORMATTER.format(date)}</li>`;
                 }).join('');
             } else {
-                q.innerText = "Czy najbliższa niedziela jest niedzielą handlową?";
+
                 const closestSunday = todaysDate.addDays(7 - todaysDate.getDay());
-                
+
+                q.innerText = `Czy najbliższa niedziela (${SUNDAYS_FORMATTER.format(closestSunday)}) jest niedzielą handlową?`;
                 if (thisYearsTradingSundaysTimes.includes(closestSunday.getTime())) {
                     a.innerText = "Tak."
                 } else {
                     a.innerText = "Nie."
                 }
 
-  
+
                 var nextTradingSundays;
                 if (tradingSundaysAfterToday.length === 5) {
                     nextTradingSundays = tradingSundaysAfterToday;
