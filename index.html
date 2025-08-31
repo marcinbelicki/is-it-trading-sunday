@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Czy dziś jest niedziela handlowa?</title>
+</head>
+
+<body>
+    <p>Dzisiaj jest: <span id="today"></span>.</p>
+    <p><span id="q"></span> <span id="a"></span></p>
+    <p id="list-title"></p>
+    <ul id="list"></ul>
+
+    <script>
+
+        Date.prototype.addDays = function (days) {
+            var date = new Date(this.valueOf());
+            date.setDate(date.getDate() + days);
+            return date;
+        }
+
+        Date.prototype.minusDays = function (days) {
+            return this.addDays(-days);
+        }
+
+        const TRADING_SUNDAY_MONTHS = [0, 3, 5, 7];
+        const SUNDAYS_FORMATTER = new Intl.DateTimeFormat('pl', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+        const TODAYS_FOMRATTER = new Intl.DateTimeFormat('pl', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+
+        function dateWithTimeZone(timeZone, year, month, day) {
+
+            let date = new Date(Date.UTC(year, month, day));
+
+            let utcDate = new Date(date.toLocaleString('en-US', { timeZone: "UTC" }));
+            let tzDate = new Date(date.toLocaleString('en-US', { timeZone: timeZone }));
+            let offset = utcDate.getTime() - tzDate.getTime();
+
+            date.setTime(date.getTime() + offset);
+
+            return date;
+        }
+
+        // https://gist.github.com/johndyer/0dffbdd98c2046f41180c051f378f343
+        function getEaster(year) {
+            var f = Math.floor,
+                // Golden Number - 1
+                G = year % 19,
+                C = f(year / 100),
+                // related to Epact
+                H = (C - f(C / 4) - f((8 * C + 13) / 25) + 19 * G + 15) % 30,
+                // number of days from 21 March to the Paschal full moon
+                I = H - f(H / 28) * (1 - f(29 / (H + 1)) * f((21 - G) / 11)),
+                // weekday for the Paschal full moon
+                J = (year + f(year / 4) + I + 2 - C + f(C / 4)) % 7,
+                // number of days from 21 March to the Sunday on or before the Paschal full moon
+                L = I - J,
+                month = 2 + f((L + 40) / 44),
+                day = L + 28 - 31 * f((month + 1) / 4);
+
+            return dateWithTimeZone("Europe/Warsaw", year, month, day);
+        }
+
+        // https://isap.sejm.gov.pl/isap.nsf/download.xsp/WDU19510040028/U/D19510028Lj.pdf
+        function holidaysForGivenEaster(easter) {
+            const year = easter.getFullYear();
+            return [
+                dateWithTimeZone("Europe/Warsaw", year, 0, 1),
+                dateWithTimeZone("Europe/Warsaw", year, 0, 6),
+                easter,
+                easter.addDays(1),
+                dateWithTimeZone("Europe/Warsaw", year, 4, 1),
+                dateWithTimeZone("Europe/Warsaw", year, 4, 3),
+                easter.addDays(49),
+                easter.addDays(60),
+                dateWithTimeZone("Europe/Warsaw", year, 7, 15),
+                dateWithTimeZone("Europe/Warsaw", year, 10, 1),
+                dateWithTimeZone("Europe/Warsaw", year, 10, 11),
+                dateWithTimeZone("Europe/Warsaw", year, 11, 24),
+                dateWithTimeZone("Europe/Warsaw", year, 11, 25),
+                dateWithTimeZone("Europe/Warsaw", year, 11, 26)
+            ].map(date => +date);
+        }
+
+        function lastSundayOfTheMonth(year, month) {
+            const lastDayOfTheMonth = new Date(year, month + 1, 0);
+            return lastDayOfTheMonth.minusDays(lastDayOfTheMonth.getDay());
+        }
+
+        function getGivenYearTradingSundays(year) {
+            const easter = getEaster(year);
+            const holidays = holidaysForGivenEaster(easter);
+            const tradingSundaysFromMonths = TRADING_SUNDAY_MONTHS.map(month => lastSundayOfTheMonth(year, month));
+            const sundayBeforeEaster = easter.minusDays(7);
+            const christmasEve = new Date(year, 11, 24);
+            const sundayBeforeChristmasEve = christmasEve.minusDays(christmasEve.getDay());
+
+            const threeSundaysBeforeChristmasEve = [2, 1, 0].map(numbersOfWeekBefore => sundayBeforeChristmasEve.minusDays(numbersOfWeekBefore * 7));
+            return tradingSundaysFromMonths
+                .concat([sundayBeforeEaster])
+                .concat(threeSundaysBeforeChristmasEve)
+                .sort((a, b) => a - b)
+                .filter(tradingSunday => !holidays.includes(+tradingSunday));
+        }
+
+        function main() {
+            const todaysTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Warsaw" }));
+            const todaysDate = new Date(todaysTime.getFullYear(), todaysTime.getMonth(), todaysTime.getDate());
+            const isSunday = todaysDate.getDay() === 0;
+            const thisYearsTradingSundays = getGivenYearTradingSundays(todaysDate.getFullYear());
+            const thisYearsTradingSundaysTimes = thisYearsTradingSundays.map(date => +date)
+
+
+            const q = document.getElementById("q");
+            const a = document.getElementById("a");
+            const listTitle = document.getElementById("list-title");
+            const list = document.getElementById("list");
+            const tradingSundaysAfterToday = thisYearsTradingSundays.filter(date => date > todaysDate);
+
+            document.getElementById("today").innerText = TODAYS_FOMRATTER.format(todaysDate);
+           
+            if (isSunday) {
+                q.innerText = "Czy dzisiaj jest niedziela handlowa?";
+                if (thisYearsTradingSundaysTimes.includes(todaysDate.getTime())) {
+                    a.innerText = "Tak."
+                } else {
+                    a.innerText = "Nie."
+                }
+                var nextTradingSundays;
+                if (tradingSundaysAfterToday.length === 5) {
+                    nextTradingSundays = tradingSundaysAfterToday;
+                } else if (tradingSundaysAfterToday.length < 5) {
+                    nextTradingSundays = tradingSundaysAfterToday.concat(getGivenYearTradingSundays(todaysDate.getFullYear() + 1)).slice(0, 5);
+                } else {
+                    nextTradingSundays = tradingSundaysAfterToday.slice(0, 5);
+                }
+
+                listTitle.innerText = `Kolejne ${nextTradingSundays.length} niedziel handlowych:`
+
+                list.innerHTML = nextTradingSundays.map((date) => {
+                    return `<li>${SUNDAYS_FORMATTER.format(date)}</li>`;
+                }).join('');
+            } else {
+                q.innerText = "Czy najbliższa niedziela jest niedzielą handlową?";
+                const closestSunday = todaysDate.addDays(7 - todaysDate.getDay());
+                
+                if (thisYearsTradingSundaysTimes.includes(closestSunday.getTime())) {
+                    a.innerText = "Tak."
+                } else {
+                    a.innerText = "Nie."
+                }
+
+  
+                var nextTradingSundays;
+                if (tradingSundaysAfterToday.length === 5) {
+                    nextTradingSundays = tradingSundaysAfterToday;
+                } else if (tradingSundaysAfterToday.length < 5) {
+                    nextTradingSundays = tradingSundaysAfterToday.concat(getGivenYearTradingSundays(todaysDate.getFullYear() + 1)).slice(0, 5);
+                } else {
+                    nextTradingSundays = tradingSundaysAfterToday.slice(0, 5);
+                }
+                listTitle.innerHTML = `${nextTradingSundays.length} najbliższych niedziel handlowych:`
+                list.innerHTML = nextTradingSundays.map((date) => {
+                    var isThisNext;
+                    if (+date === +closestSunday) {
+                        isThisNext = " (najbliższa niedziela)";
+                    } else {
+                        isThisNext = "";
+                    }
+                    return `<li>${SUNDAYS_FORMATTER.format(date)}${isThisNext}</li>`;
+                }).join('');
+            }
+
+
+        }
+
+        main();
+
+
+
+    </script>
+
+</body>
+
+</html>
