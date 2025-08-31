@@ -198,14 +198,7 @@
 
         }
 
-        function darkModeSetting(dark) {
-            if (dark) {
-                document.querySelector("meta[name=\"color-scheme\"]").setAttribute("content", "light dark");
-            }
-        }
         main(new Date());
-        darkModeSetting(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
-
     </script>
 
 </body>
