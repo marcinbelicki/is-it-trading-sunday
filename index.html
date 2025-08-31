@@ -111,8 +111,8 @@
                 .filter(tradingSunday => !holidays.includes(+tradingSunday));
         }
 
-        function main() {
-            const todaysTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Warsaw" }));
+        function main(todaysTimeLocal) {
+            const todaysTime = new Date(todaysTimeLocal.toLocaleString("en-US", { timeZone: "Europe/Warsaw" }));
             const todaysDate = new Date(todaysTime.getFullYear(), todaysTime.getMonth(), todaysTime.getDate());
             const isSunday = todaysDate.getDay() === 0;
             const thisYearsTradingSundays = getGivenYearTradingSundays(todaysDate.getFullYear());
@@ -197,9 +197,7 @@
 
         }
 
-        main();
-
-
+        main(new Date());
 
     </script>
 
