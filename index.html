@@ -113,7 +113,7 @@
 
         function main() {
             const todaysTime = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Warsaw" }));
-            const todaysDate = new Date(todaysTime.getFullYear(), todaysTime.getMonth(), todaysTime.getDate()).minusDays(1);
+            const todaysDate = new Date(todaysTime.getFullYear(), todaysTime.getMonth(), todaysTime.getDate());
             const isSunday = todaysDate.getDay() === 0;
             const thisYearsTradingSundays = getGivenYearTradingSundays(todaysDate.getFullYear());
             const thisYearsTradingSundaysTimes = thisYearsTradingSundays.map(date => +date)
