@@ -14,8 +14,8 @@
         <p style="margin-top: 1rem; margin-left: 1rem;">Dzisiaj w Polsce jest:<br> <span id="today"></span>.<br>
             <span id="q"></span> <b id="a"></b><br>
             <span id="list-title"></span><br>
-        <ul id="list" style="margin-top: -3rem; margin-left: 2rem;"></ul>
         </p>
+        <ul id="list" style="margin-top: -3rem; margin-left: 2rem;"></ul>
     </span>
     <hr />
 
@@ -200,7 +200,7 @@
 
         function darkModeSetting(dark) {
             if (dark) {
-                document.querySelector("meta[name=\"color-scheme\"]").setAttribute("content",  "light dark");
+                document.querySelector("meta[name=\"color-scheme\"]").setAttribute("content", "light dark");
             }
         }
         main(new Date());
