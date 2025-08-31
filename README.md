@@ -1,0 +1,1 @@
+Download the [index.html](/index.html) file or open the website [here](https://marcinbelicki.github.io/is-it-trading-sunday/).
